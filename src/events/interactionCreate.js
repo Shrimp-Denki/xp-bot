@@ -1,27 +1,21 @@
+// src/events/interactionCreate.js
 const { Events } = require('discord.js');
 
 module.exports = {
   name: Events.InteractionCreate,
-  once: false,
   async execute(interaction) {
     if (!interaction.isChatInputCommand()) return;
-
-    const command = interaction.client.commands.get(interaction.commandName);
-
-    if (!command) {
-      console.error(`No command matching ${interaction.commandName} was found.`);
-      return;
-    }
-
+    const cmd = interaction.client.commands.get(interaction.commandName);
+    if (!cmd) return;
     try {
-      await command.execute(interaction);
-    } catch (error) {
-      console.error(error);
-      if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ content: 'Có lỗi khi sử dụng lệnh!', ephemeral: true });
+      await cmd.execute(interaction);
+    } catch (err) {
+      console.error('Command Error:', err);
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ content: '❌ Có lỗi khi thực thi lệnh.', ephemeral: true });
       } else {
-        await interaction.reply({ content: 'Có lỗi khi sử dụng lệnh!', ephemeral: true });
+        await interaction.followUp({ content: '❌ Có lỗi khi thực thi lệnh.', ephemeral: true });
       }
     }
-  },
+  }
 };
