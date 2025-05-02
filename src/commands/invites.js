@@ -3,8 +3,8 @@ const { SlashCommandBuilder } = require('discord.js');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('invites')
-    .setDescription('Get the invite count of a user')
-    .addUserOption(o => o.setName('user').setDescription('Target user')),
+    .setDescription('Xem số lượng invite của người dùng')
+    .addUserOption(o => o.setName('user').setDescription('Người dùng bạn muốn')),
   async execute(interaction) {
     const target = interaction.options.getUser('user') || interaction.user;
     const invites = await interaction.guild.invites.fetch();

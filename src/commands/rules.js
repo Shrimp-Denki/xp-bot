@@ -1,3 +1,4 @@
+// src/commands/rules.js
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const xpCfg = require('../config/xp');
 
@@ -6,25 +7,45 @@ module.exports = {
     .setName('rules')
     .setDescription('Xem luật đua XP toàn server'),
   async execute(interaction) {
+    const channelMultipliers = xpCfg.channelMultipliers || {};
+    const levelMultipliers   = xpCfg.levelMultipliers || {};
+    const bonusActions       = xpCfg.bonusActions || {};
+    const levelUpBonuses     = xpCfg.levelUpBonuses || {};
+
     const embed = new EmbedBuilder()
       .setTitle('📜 Luật đua XP')
       .addFields(
-        { name:'• XP tin nhắn gốc', value:`${xpCfg.baseMessageXP}` },
-        { name:'• Channel multipliers', value:
-            Object.entries(xpCfg.channelMultipliers)
-              .map(([ch,m])=>`<#${ch}> → ${m}x`).join('\n')
+        { 
+          name: '• XP tin nhắn gốc',
+          value: `${xpCfg.baseMessageXP ?? 0}`, 
         },
-        { name:'• Role multipliers', value:
-            Object.entries(xpCfg.levelMultipliers)
-              .map(([r,m])=>`<@&${r}> → ${m}x`).join('\n')
+        { 
+          name: '• Channel multipliers',
+          value:
+            Object.entries(channelMultipliers)
+              .map(([channelId, m]) => `<#${channelId}> → ${m}x`)
+              .join('\n') || 'Không có'
         },
-        { name:'• Bonus actions', value:
-            Object.entries(xpCfg.bonusActions)
-              .map(([k,x])=>`${k} → +${x} XP`).join('\n')
+        { 
+          name: '• Role multipliers',
+          value:
+            Object.entries(levelMultipliers)
+              .map(([roleId, m]) => `<@&${roleId}> → ${m}x`)
+              .join('\n') || 'Không có'
         },
-        { name:'• Level-up bonuses', value:
-            Object.entries(xpCfg.levelUpBonuses)
-              .map(([l,b])=>`Lv.${l} → +${b} XP`).join('\n')
+        { 
+          name: '• Bonus actions',
+          value:
+            Object.entries(bonusActions)
+              .map(([key, x]) => `${key} → +${x} XP`)
+              .join('\n') || 'Không có'
+        },
+        { 
+          name: '• Level-up bonuses',
+          value:
+            Object.entries(levelUpBonuses)
+              .map(([lvl, b]) => `Lv.${lvl} → +${b} XP`)
+              .join('\n') || 'Không có'
         }
       )
       .setColor('Blue');

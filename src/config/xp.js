@@ -26,8 +26,9 @@ module.exports = {
       // …v.v.
     },
   
-    baseMessageXP: 10,   // XP gốc mỗi tin nhắn
-  
+    baseMessageXP: 10,   // XP gốc mỗi tin nhắ
+
+    inviteXP: 20,
     // Bonus actions
     bonusActions: {
       share_material:   20,

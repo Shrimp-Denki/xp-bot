@@ -5,7 +5,7 @@ const xpDB    = require('../managers/xp');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('daily')
-    .setDescription('🎁 Claim your daily XP reward'),
+    .setDescription('🎁 Nhận XP hàng ngày'),
   async execute(interaction) {
     const userId  = interaction.user.id;
     const guildId = interaction.guild.id;

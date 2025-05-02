@@ -3,8 +3,8 @@ const { SlashCommandBuilder } = require('discord.js');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('invited')
-    .setDescription('Find the list of users invited by the target user')
-    .addUserOption(o => o.setName('user').setDescription('Target user')),
+    .setDescription('Tìm danh sách người dùng được người dùng')
+    .addUserOption(o => o.setName('user').setDescription('Người dùng bạn muốn')),
   async execute(interaction) {
     const target = interaction.options.getUser('user') || interaction.user;
     const mapInv = interaction.client.invitedByMap;
