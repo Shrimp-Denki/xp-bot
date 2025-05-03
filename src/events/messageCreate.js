@@ -1,5 +1,6 @@
 // src/events/messageCreate.js
-const { Events, EmbedBuilder } = require('discord.js');
+const { Events, AttachmentBuilder } = require('discord.js');
+const Canvas = require('canvas');
 const xpCfg     = require('../config/xp');
 const xpDB      = require('../managers/xp');
 const { calculateLevel } = require('../managers/level');
@@ -58,7 +59,7 @@ module.exports = {
 
     // 7) Tính level cũ & mới
     const newTotalXP = xpDB.getXP(message.author.id, message.guild.id);
-    const { level: newLevel, xpIntoLevel, xpNeeded } = calculateLevel(newTotalXP);
+    const { level: newLevel } = calculateLevel(newTotalXP);
     const oldTotalXP = newTotalXP - xpEarn;
     const { level: oldLevel } = calculateLevel(oldTotalXP);
 
@@ -66,38 +67,71 @@ module.exports = {
     if (xpCfg.logChannelId) {
       const logCh = message.guild.channels.cache.get(xpCfg.logChannelId);
       if (logCh?.isTextBased()) {
-        const embed = new EmbedBuilder()
-          .setTitle('🎖️ XP Update')
-          .addFields(
+        const embed = {
+          title: '🎖️ XP Update',
+          fields: [
             { name: 'User',    value: `<@${message.author.id}>`, inline: true },
             { name: 'XP thêm', value: `+${xpEarn}`,               inline: true },
             { name: 'Tổng XP', value: `**${newTotalXP}**`,        inline: true },
             { name: 'Level',   value: `${oldLevel} → ${newLevel}`, inline: true }
-          )
-          .setTimestamp();
+          ],
+          timestamp: new Date()
+        };
         await logCh.send({ embeds: [embed] }).catch(() => {});
       }
     }
 
     // 9) Nếu lên cấp
     if (newLevel > oldLevel) {
+      const levelCh = xpCfg.levelUpChannelId
+        ? message.guild.channels.cache.get(xpCfg.levelUpChannelId)
+        : message.channel;
+      if (levelCh?.isTextBased()) {
+        // Tạo canvas thông báo Level Up
+        const canvas = Canvas.createCanvas(700, 250);
+        const ctx = canvas.getContext('2d');
+        // Background
+        ctx.fillStyle = '#2c2f33';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Text Level Up
+        ctx.font = 'bold 40px Sans';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.fillText('LEVEL UP!', canvas.width / 2, 50);
+        // Avatar (ép định dạng PNG để Canvas hỗ trợ)
+        const avatarURL = message.author.displayAvatarURL({ extension: 'png', size: 128 });
+        const avatar = await Canvas.loadImage(avatarURL);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(100, 150, 64, 0, Math.PI * 2, true);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(avatar, 36, 86, 128, 128);
+        ctx.restore();
+        // Level trước → level sau
+        ctx.font = 'bold 30px Sans';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
+        ctx.fillText(`Level ${oldLevel}`, 200, 150);
+        ctx.fillText('→', 360, 150);
+        ctx.fillText(`Level ${newLevel}`, 400, 150);
+        // Gửi ảnh kèm mention
+        const buffer = canvas.toBuffer();
+        const attachment = new AttachmentBuilder(buffer, { name: 'level-up.png' });
+        await levelCh.send({ content: `🎉 <@${message.author.id}> đã lên **Level ${newLevel}**!`, files: [attachment] });
+      }
+
       const info = levelRoles[newLevel];
       let gaveRole = false;
-
-      // Thử gán role tự động
       if (info) {
         const role = message.guild.roles.cache.get(info.id);
         if (role) {
           try {
             await message.member.roles.add(role);
             gaveRole = true;
-          } catch {
-            gaveRole = false;
-          }
+          } catch {}
         }
       }
-
-      // 10) Nếu bot không gán được role, gợi ý dùng /claim
       if (info && !gaveRole) {
         await message.reply(
           `🎁 Bạn đã đạt Level **${newLevel}** nhưng chưa có role **${info.name}**.\n` +
