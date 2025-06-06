@@ -29,6 +29,11 @@ module.exports = {
       inviterId = usedInvite?.inviter?.id;
     }
 
+    // Save inviter mapping for commands like /inviter and /invited
+    if (inviterId) {
+      client.invitedByMap.set(member.id, inviterId);
+    }
+
     // --- 2) Cộng XP nếu có inviter ---
     if (inviterId) {
       const amount = xpCfg.inviteXP;
